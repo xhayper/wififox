@@ -1,0 +1,7 @@
+electron.vite.config.ts
+tsconfig.node.json
+tsconfig.web.json
+tsconfig.json
+icon.png
+.github
+src

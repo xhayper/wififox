@@ -1,0 +1,11 @@
+diff --git a/node_modules/@types/default-gateway/index.d.ts b/node_modules/@types/default-gateway/index.d.ts
+index 20fbf52..8cd0019 100644
+--- a/node_modules/@types/default-gateway/index.d.ts
++++ b/node_modules/@types/default-gateway/index.d.ts
+@@ -14,5 +14,5 @@ export interface DefaultGatewayFn {
+ 
+ export interface Gateway {
+     gateway: string;
+-    interface: string;
++    int: string;
+ }

@@ -1,4 +1,4 @@
-const spawn = require('child_process').spawn
+import { spawn } from 'node:child_process';
 
 const linuxPing = (ip) => {
   return new Promise((resolve, _) => {
@@ -28,7 +28,7 @@ const darwinPing = (ip) => {
 }
 
 
-module.exports = (ip) => {
+export default function (ip: string): Promise<unknown> {
   if (process.platform.indexOf('linux') == 0) {
     return linuxPing(ip)
   } else if (process.platform.indexOf('win') == 0) {
@@ -36,4 +36,6 @@ module.exports = (ip) => {
   } else if (process.platform.indexOf('darwin') == 0) {
     return darwinPing(ip)
   }
+
+  return Promise.resolve()
 }

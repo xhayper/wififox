@@ -1,35 +1,36 @@
-const defaultGateway = require('default-gateway')
-const os = require('os')
-const ping = require('./ping')
-const arp = require('./arp')
-const spoof = require('spoof')
-const cidrRange = require('cidr-range')
-const wifi = require('node-wifi')
-const request = require('request')
+import defaultGateway from 'default-gateway'
+import cidrRange from 'cidr-range'
+import * as arp from './arp'
+import wifi from 'node-wifi'
+import ping from './ping'
+import spoof from 'spoof'
+import os from 'node:os'
 
 const BLOCK_SIZE = 255
 
 const checkIsConnected = () => {
   return new Promise((resolve) => {
-    request('http://www.apple.com/library/test/success.html', (err, response, body) => {
-      if (err) return resolve(false)
-      resolve(body === '<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>')
-    })
+    fetch('http://www.apple.com/library/test/success.html')
+      .then(async (response) => {
+        if (!response.ok) return resolve(false)
+        resolve(await response.text() === "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>")
+      })
+      .catch(() => resolve(false))
   })
 }
 
 let isInit = false
 async function init() {
   if (isInit) return
-  const { interface } = await defaultGateway.v4() // TODO: v6 support
-  if (!interface) return
+  const { int } = await defaultGateway.v4() // TODO: v6 support
+  if (!int) return
   wifi.init({
-    iface: interface
+    iface: int
   })
   isInit = true
 }
 
-module.exports.isOnOpenNetwork = async () => {
+export async function isOnOpenNetwork() {
   await init()
   const currentConnections = await new Promise((resolve, reject) => {
     wifi.getCurrentConnections(function (err, currentConnections) {
@@ -54,18 +55,18 @@ function isBroadcastAddress(mac) {
   return mac === 'FF:FF:FF:FF:FF:FF'
 }
 
-module.exports.listValidMacs = async () => {
-  const { gateway, interface } = await defaultGateway.v4() // TODO: v6 support
-  const iface = os.networkInterfaces()[interface].filter(i => i.family === 'IPv4')[0]
+export async function listValidMacs() {
+  const { gateway, int } = await defaultGateway.v4() // TODO: v6 support
+  const iface = os.networkInterfaces()[int].filter(i => i.family === 'IPv4')[0]
   return (await arp.listMACs(gateway))
     .filter(mac => mac !== iface.mac)
     .filter(mac => !isMulticastAddress(mac))
     .filter(mac => !isBroadcastAddress(mac))
 }
 
-async function pingScan(interface, blockCallback) {
+async function pingScan(int: string, blockCallback) {
   // get interface object
-  const iface = os.networkInterfaces()[interface].filter(i => i.family === 'IPv4')[0]
+  const iface = os.networkInterfaces()[int].filter(i => i.family === 'IPv4')[0]
 
   // get all IPs in CIDR range of gateway
   const range = cidrRange(iface.cidr, { onlyHosts: true })
@@ -88,9 +89,9 @@ async function pingScan(interface, blockCallback) {
   return false
 }
 
-module.exports.manualScan = async () => {
-  const { interface } = await defaultGateway.v4() // TODO: v6 support
-  await pingScan(interface, async () => { return false })
+export async function manualScan() {
+  const { int } = await defaultGateway.v4() // TODO: v6 support
+  await pingScan(int, async () => { return false })
 }
 
 async function tryMACs(attemptedMACs, initialSSID, it) {
@@ -120,13 +121,13 @@ async function tryMACs(attemptedMACs, initialSSID, it) {
   return false
 }
 
-module.exports.connect = async (silentMode) => {
+export async function connect(silentMode) {
   await init()
   if (await checkIsConnected()) return // try our initial MAC
 
   // get default gateway, interface name
-  const { interface } = await defaultGateway.v4() // TODO: v6 support
-  const it = spoof.findInterface(interface)
+  const { int } = await defaultGateway.v4() // TODO: v6 support
+  const it = spoof.findInterface(int)
 
   const currentConnections = await new Promise((resolve, reject) => {
     wifi.getCurrentConnections(function (err, currentConnections) {
@@ -145,14 +146,14 @@ module.exports.connect = async (silentMode) => {
     throw new Error('WiFiFox only works with open networks.')
   }
   const initialSSID = currentConnections[0].ssid
-  const iface = os.networkInterfaces()[interface].filter(i => i.family === 'IPv4')[0]
+  const iface = os.networkInterfaces()[int].filter(i => i.family === 'IPv4')[0]
   const attemptedMACs = [iface.mac]
 
   let isConnected = false
   if (silentMode) {
     isConnected = await tryMACs(attemptedMACs, initialSSID, it)
   } else {
-    isConnected = await pingScan(interface, async () => {
+    isConnected = await pingScan(int, async () => {
       return await tryMACs(attemptedMACs, initialSSID, it)
     })
   }
@@ -166,10 +167,10 @@ module.exports.connect = async (silentMode) => {
   }
 }
 
-module.exports.reset = async () => {
+export async function reset() {
   // get default gateway, interface name
-  const { interface } = await defaultGateway.v4() // TODO: v6 support
-  const it = spoof.findInterface(interface)
+  const { int } = await defaultGateway.v4() // TODO: v6 support
+  const it = spoof.findInterface(int)
 
   spoof.setInterfaceMAC(it.device, it.address, it.port)
 }

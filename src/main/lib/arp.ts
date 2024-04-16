@@ -1,4 +1,4 @@
-const spawn = require('child_process').spawn
+import { spawn } from 'node:child_process';
 
 const spawnArp = () => {
   const process = spawn('arp', ['-a'])
@@ -50,7 +50,7 @@ const listDarwinMACs = async (gatewayIP) => {
   return macs
 }
 
-module.exports.listMACs = (gatewayIP) => {
+export function listMACs(gatewayIP: string) {
   if (process.platform.indexOf('linux') == 0) {
     return listLinuxMACs(gatewayIP)
   } else if (process.platform.indexOf('win') == 0) {

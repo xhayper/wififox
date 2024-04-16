@@ -2,24 +2,37 @@
   "name": "wififox",
   "version": "1.0.4",
   "description": "A simple tool for bypassing WiFi gatekeepers.",
-  "main": "main.js",
-  "bin": "main.js",
+  "main": "./out/main/index.js",
+  "bin": "./out/main/index.js",
   "scripts": {
-    "start": "electron --no-sandbox .",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "prebuild": "electron-vite build",
     "pack": "electron-builder --dir",
     "dist": "electron-builder -mwl",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps && patch-package"
   },
-  "author": "",
+  "author": "t-mullen",
   "license": "GPLv3",
   "dependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
     "cidr-range": "^2.0.0",
-    "default-gateway": "^6.0.1",
-    "electron-builder": "^22.7.0",
-    "node-wifi": "^2.0.12",
-    "request": "^2.88.2",
-    "spoof": "^2.0.1",
-    "electron": "^9.0.5"
+    "default-gateway": "^6.0.3",
+    "node-wifi": "^2.0.16",
+    "patch-package": "^8.0.0",
+    "spoof": "^2.0.4"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/default-gateway": "3.0.1",
+    "@types/node-wifi": "^2.0.2",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.1.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.8"
   },
   "build": {
     "appId": "com.wififox.app",
@@ -29,6 +42,12 @@
     },
     "linux": {
       "category": "Utility"
+    }
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@types/default-gateway@3.0.1": "patches/@types__default-gateway@3.0.1.patch",
+      "default-gateway@6.0.3": "patches/default-gateway@6.0.3.patch"
     }
   }
 }

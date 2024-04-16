@@ -1,0 +1,122 @@
+diff --git a/node_modules/default-gateway/android.js b/node_modules/default-gateway/android.js
+index bfc4d72..25c27b6 100644
+--- a/node_modules/default-gateway/android.js
++++ b/node_modules/default-gateway/android.js
+@@ -14,7 +14,7 @@ const parse = stdout => {
+   (stdout || "").trim().split("\n").some(line => {
+     const [_, gateway, iface] = /default via (.+?) dev (.+?)( |$)/.exec(line) || [];
+     if (gateway && isIP(gateway)) {
+-      result = {gateway, interface: (iface ? iface : null)};
++      result = {gateway, int: (iface ? iface : null)};
+       return true;
+     }
+   });
+diff --git a/node_modules/default-gateway/darwin.js b/node_modules/default-gateway/darwin.js
+index 0cbb3f5..ee87685 100644
+--- a/node_modules/default-gateway/darwin.js
++++ b/node_modules/default-gateway/darwin.js
+@@ -23,7 +23,7 @@ const parse = (stdout, family) => {
+     const gateway = results[1];
+     const iface = results[family === "v4" ? v4IfaceColumn : 3];
+     if (dests.has(target) && gateway && isIP(gateway)) {
+-      result = {gateway, interface: (iface ? iface : null)};
++      result = {gateway, int: (iface ? iface : null)};
+       return true;
+     }
+   });
+diff --git a/node_modules/default-gateway/freebsd.js b/node_modules/default-gateway/freebsd.js
+index 1e1e44c..6163550 100644
+--- a/node_modules/default-gateway/freebsd.js
++++ b/node_modules/default-gateway/freebsd.js
+@@ -15,7 +15,7 @@ const parse = stdout => {
+   (stdout || "").trim().split("\n").some(line => {
+     const [target, gateway, _, iface] = line.split(/ +/) || [];
+     if (dests.has(target) && gateway && isIP(gateway)) {
+-      result = {gateway, interface: (iface ? iface : null)};
++      result = {gateway, int: (iface ? iface : null)};
+       return true;
+     }
+   });
+diff --git a/node_modules/default-gateway/ibmi.js b/node_modules/default-gateway/ibmi.js
+index 8c2783b..84dbacc 100644
+--- a/node_modules/default-gateway/ibmi.js
++++ b/node_modules/default-gateway/ibmi.js
+@@ -11,7 +11,7 @@ const parse = stdout => {
+     const resultObj = JSON.parse(stdout);
+     const gateway = resultObj.records[0].NEXT_HOP;
+     const iface = resultObj.records[0].LOCAL_BINDING_INTERFACE;
+-    result = {gateway, iface};
++    result = {gateway, int: iface};
+   } catch {}
+   if (!result) {
+     throw new Error("Unable to determine default gateway");
+diff --git a/node_modules/default-gateway/linux.js b/node_modules/default-gateway/linux.js
+index d60c460..06bb1f4 100644
+--- a/node_modules/default-gateway/linux.js
++++ b/node_modules/default-gateway/linux.js
+@@ -17,7 +17,7 @@ const parse = (stdout, family) => {
+     const gateway = (results[1] || "").substring(5);
+     const iface = (results[2] || "").substring(5);
+     if (gateway && isIP(gateway)) { // default via 1.2.3.4 dev en0
+-      result = {gateway, interface: (iface ? iface : null)};
++      result = {gateway, int: (iface ? iface : null)};
+       return true;
+     } else if (iface && !gateway) { // default via dev en0
+       const interfaces = networkInterfaces();
+@@ -26,7 +26,7 @@ const parse = (stdout, family) => {
+ 
+       addresses.some(addr => {
+         if (addr.family.substring(2) === family && isIP(addr.address)) {
+-          result = {gateway: addr.address, interface: (iface ? iface : null)};
++          result = {gateway: addr.address, int: (iface ? iface : null)};
+           return true;
+         }
+       });
+diff --git a/node_modules/default-gateway/openbsd.js b/node_modules/default-gateway/openbsd.js
+index 050179a..164daa0 100644
+--- a/node_modules/default-gateway/openbsd.js
++++ b/node_modules/default-gateway/openbsd.js
+@@ -18,7 +18,7 @@ const parse = stdout => {
+     const gateway = results[1];
+     const iface = results[7];
+     if (dests.has(target) && gateway && isIP(gateway)) {
+-      result = {gateway, interface: (iface ? iface : null)};
++      result = {gateway, int: (iface ? iface : null)};
+       return true;
+     }
+   });
+diff --git a/node_modules/default-gateway/sunos.js b/node_modules/default-gateway/sunos.js
+index acdb1cd..0152354 100644
+--- a/node_modules/default-gateway/sunos.js
++++ b/node_modules/default-gateway/sunos.js
+@@ -18,7 +18,7 @@ const parse = stdout => {
+     const gateway = results[1];
+     const iface = results[5];
+     if (dests.has(target) && gateway && isIP(gateway)) {
+-      result = {gateway, interface: (iface ? iface : null)};
++      result = {gateway, int: (iface ? iface : null)};
+       return true;
+     }
+   });
+diff --git a/node_modules/default-gateway/win32.js b/node_modules/default-gateway/win32.js
+index 9597b77..fdf39b4 100644
+--- a/node_modules/default-gateway/win32.js
++++ b/node_modules/default-gateway/win32.js
+@@ -72,7 +72,7 @@ const promise = async family => {
+     name = parseIfTable(stdout);
+   }
+ 
+-  return {gateway, interface: name ? name : null};
++  return {gateway, int: name ? name : null};
+ };
+ 
+ const sync = family => {
+@@ -89,7 +89,7 @@ const sync = family => {
+     name = parseIfTable(stdout);
+   }
+ 
+-  return {gateway, interface: name ? name : null};
++  return {gateway, int: name ? name : null};
+ };
+ 
+ module.exports.v4 = () => promise("v4");
